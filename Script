@@ -3,9 +3,9 @@
 if [ $HOSTNAME == "Debian" ]; then
 
 sudo apt-get install nfs-kernel-server nfs-common postmap -y
-apt-get install portmap
+/etc/init.d/nfs-kernel-server start
 /etc/init.d/portmap start
-/etc/init.d/nfs start
+
 chkconfig --level 35 portmap on
 chkconfig --level 35 nfs on
 mkdir /nfsshare
