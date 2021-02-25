@@ -2,7 +2,7 @@
 
 if [ $HOSTNAME == "Debian" ]; then
 
-apt-get install nfs-utils nfs-utils-lib
+sudo apt-get install nfs-kernel-server nfs-common postmap -y
 apt-get install portmap
 /etc/init.d/portmap start
 /etc/init.d/nfs start
