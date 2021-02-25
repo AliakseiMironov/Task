@@ -5,8 +5,9 @@ if [ $HOSTNAME == "Debian" ]; then
 sudo apt-get install nfs-kernel-server nfs-common postmap -y
 /etc/init.d/nfs-kernel-server start
 /etc/init.d/portmap start
-echo "/mnt/movie 192.168.0.0/24(rw,async,no_subtree_check)
-/mnt/user 192.168.0.41(rw,async,no_subtree_check)" >> /etc/exports
+echo "/mnt 192.168.0.0/24(ro, fsid=0, async, no_subtree_check)
+/mnt/movie 192.168.0.0/24(rw, async, no_subtree_check)
+/mnt/user 192.168.5.39(rw, async, no_subtree_check)" >> /etc/exports
 
 chkconfig --level 35 portmap on
 chkconfig --level 35 nfs on
