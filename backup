@@ -30,4 +30,4 @@ tar cvzpf $BACK_PATH3/etc.$TIMESTAMP.tar.gz /etc
 crontab -e 
 ----------------------------------------
 0 5 * * * /usr/bin/rsync -a /root/ /nfs/folder синхронизируем бэкапы на сервер nfs
-0 2 * * * /root/backupwww скрипт бэкапа
+0 2 * * * /root/backup скрипт бэкапа
