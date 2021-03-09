@@ -1,25 +1,47 @@
 #!/bin/bash
 
+#Переменная для сравнения
+name=$(hostname)
 
-if [ $hostname="server” ]; then
-  sudo apt-get nfs-kernel-server nfs-common portmap -y
-  sudo mkdir /home/nfs
-  sudo chown nobody:nogroup /home/nfs
-  sudo nano /etc/exports
- 
-#share
-  sudo exportfs -a
-  sudo systemctl enable nfs-server
-  sudo rount -t nfs 192.168.100.56:/home/nfs /mnt/nfs
+#Проверка на совпадение имени и есть ли уже директория share
+if [[ "$name" == "Server"  &&   -d /mnt/share ]]; then
+  echo “Скрипт был запущен ранее”
+elif [[ "$name" == "Server"  && !   -d /mnt/share ]]; then
 
-  echo "server located"
+#Установка и обновление пакетов на сервере
+  sudo apt-get update
+  sudo apt-get install nfs-kernel-server nfs-common -y
 
-elif [ $hostname="client" ]; then 
-  sudo apt-get install nfs-common 
+#Создание директории и изменения прав
+  sudo mkdir –p /mnt/share
+  sudo chown nobody:nogroup /mnt/share
+  sudo chmod 777 /mnt/share
   
-  echo "client located"
+#Разрешения доступа для подсети 192.168.100.0 пользовался https://help.ubuntu.ru/wiki/nfs
+  sudo echo "/mnt/shara 192.168.100.0/24(rw,insecure,nohide,all_squash,anonuid=1000,anongid=1000,no_subtree_check)" | tee -a  /etc/exports
 
+#Экспорт общего каталога и ребут ядра NFS
+  sudo exportfs -a
+  sudo systemctl restart nfs-kernel-server
+
+#Установка и настройка брандмауэра для проверки открытия порта sudo ufw status
+  sudo apt install ufw
+  sudo ufw enable
+  sudo ufw allow from 192.168.100.0/24 to any port nfs
+  sudo ufw allow ssh
+
+#Блок клиента NFS
+elif [[ "$name" == "Client"  &&   -d /mnt/share_client ]]; then
+  echo “Скрипт был уже запущен ранее”
+elif [[ "$name" == "Client"  &&  ! -d /mnt/share_client ]]; then
+  sudo apt-get update
+  sudo apt-get install nfs-common -y
+# Монтирование для клиента NFS
+  sudo mkdir -p /mnt/share_client
+  sudo chmod 755 /mnt/share_client
+
+#Подключение каталога сервера к клиенту
+  sudo mount -t nfs -O uid=1000,iocharset=utf-8 192.168.100.56:/mnt/share /mnt/share_client
 else
-echo "Faild to find hostname"
-
+  echo “Всё было сделано ранее”
 fi
