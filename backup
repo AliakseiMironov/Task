@@ -1,33 +1,25 @@
 #!/bin/bash
 
-#[Changes Directory]
-cd /root/backup
+#Переменная имени компьютера
+name=$(hostname)
 
-#[Stamps the file name with a date]
-TIMESTAMP=`date +%m-%d-%y-%H%M`
+#Проверка является ли он Client
+if [[ "$name" == "Client"  &&   -d /mnt/share_client ]]; then
 
-#[DB Backup Scripts]
-# DB Name
-HOST=localhost
-DBNAME="basename"
-USER="username"
-PASSWORD="password"
-DUMP_PATH=/root/backup/sql
-BACK_PATH=/root/backup/www/
-BACK_PATH3=/root/backup/etc/
+#Создаем переменную и архив по имени день-месяц-год-час-мин-сек
+  date=`date '+%d-%m-%Y-%H-%M-%S'`
+  sudo tar czf "$date.tar.gz" /root/. /home/*/.*
+  sudo chmod 755 "$date.tar.gz"
+  
+#Перемещение архива в директорию NFS
+  sudo mv "$date.tar.gz" /mnt/share_client
+  
+#Задача для крон
+  cd /tmp
+  sudo touch crontab-arch
+  sudo echo "05 8 * * * /tmp/backup.sh" | tee -a  /tmp/crontab-arch
+  sudo crontab crontab-arch
 
-#dbname
-mysqldump --opt -c -e -Q -h$HOST -u$USER -p$PASSWORD $DBNAME > $DBNAME.sql
-tar czpf $DUMP_PATH/$DBNAME.$TIMESTAMP.tar.gz $DBNAME.sql
-rm -f $DBNAME.sql
-
-#Backing up files
-tar cvzpf $BACK_PATH/www.$TIMESTAMP.tar.gz --same-owner  --exclude=/var/www/site/gruzims/* /var/www
-tar cvzpf $BACK_PATH3/etc.$TIMESTAMP.tar.gz /etc
-
-#Cron
-
-crontab -e 
-----------------------------------------
-0 5 * * * /usr/bin/rsync -a /root/ /nfs/folder синхронизируем бэкапы на сервер nfs
-0 2 * * * /root/backup скрипт бэкапа
+else
+  echo “Невозможно выполнить.Скрипт не для этого устройства”
+fi
